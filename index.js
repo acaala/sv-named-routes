@@ -19,7 +19,7 @@ export function svelteNamedRoutes(options = {}) {
   } = options;
 
   const sync = async () => {
-    const files = await glob(`${routesDir}/**/+page.{ts,js,svelte}`);
+    const files = await glob(`${routesDir}/**/+page.{ts,js}`);
     const map = {};
 
     for (const file of files) {
@@ -40,6 +40,20 @@ export function svelteNamedRoutes(options = {}) {
         routePath = "/" + routePath.replace(/\/$/, "").replace(/^\/+/, "");
         map[name] = routePath;
       }
+    }
+
+    const gitignorePath = path.resolve(".gitignore");
+
+    try {
+      let gitignore = await fs.readFile(gitignorePath, "utf-8");
+      const ignoreEntry = "\n# Svelte Named Routes\nsrc/lib/generated/";
+
+      if (!gitignore.includes("src/lib/generated/")) {
+        await fs.writeFile(gitignorePath, gitignore + ignoreEntry);
+        console.log("✅ Added src/lib/generated/ to .gitignore");
+      }
+    } catch (e) {
+      // If .gitignore doesn't exist, we just skip it
     }
 
     const content = `
